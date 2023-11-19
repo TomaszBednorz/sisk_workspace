@@ -1,0 +1,2 @@
+../Core/Lib/sniffer.c:38:6:Sniffer_Init	48	static
+../Core/Lib/sniffer.c:64:6:Sniffer_Transmit	96	static
