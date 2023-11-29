@@ -47,7 +47,6 @@ void Sniffer_Init(void)
 	canfil.FilterMaskIdLow = 0;
 	canfil.FilterScale = CAN_FILTERSCALE_32BIT;
 	canfil.FilterActivation = ENABLE;
-	canfil.SlaveStartFilterBank = 14;
 
 	HAL_CAN_ConfigFilter(&hcan1,&canfil); //Initialize CAN Filter
 

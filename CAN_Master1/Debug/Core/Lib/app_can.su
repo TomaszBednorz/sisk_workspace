@@ -1,4 +1,0 @@
-../Core/Lib/app_can.c:45:6:AppCan_Init	8	static
-../Core/Lib/app_can.c:50:6:AppCan_Task	8	static
-../Core/Lib/app_can.c:85:6:AppCan_TxFrame	48	static
-../Core/Lib/app_can.c:99:6:AppCan_AddToScheaduler	32	static
