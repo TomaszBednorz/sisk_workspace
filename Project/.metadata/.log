@@ -1,0 +1,45 @@
+!SESSION 2023-12-01 18:01:13.605 -----------------------------------------------
+eclipse.buildId=Version 1.10.1
+java.version=11.0.14.1
+java.vendor=Eclipse Adoptium
+BootLoader constants: OS=win32, ARCH=x86_64, WS=win32, NL=pl_PL
+Command-line arguments:  -os win32 -ws win32 -arch x86_64
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 4 4 2023-12-01 18:01:58.024
+!MESSAGE CubeMX plugin appears to be active, Log4j initialization might be too late.
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 1 1 2023-12-01 18:01:58.094
+!MESSAGE Log4j initialized with config file C:\Users\tomek\OneDrive\Pulpit\SiSK\sisk_workspace\Project\.metadata\.log4j.xml
+
+!ENTRY com.st.stm32cube.ide.mcu.ide 1 1 2023-12-01 18:02:07.173
+!MESSAGE Started RMI Server, listening on port 41337
+
+!ENTRY org.eclipse.cdt.core 1 0 2023-12-01 18:04:45.151
+!MESSAGE Indexed 'CAN_Master1' (37 sources, 131 headers) in 7,48 sec: 14 705 declarations; 89 747 references; 2 unresolved inclusions; 42 syntax errors; 147 unresolved names (0,14%)
+
+!ENTRY org.eclipse.cdt.core 1 0 2023-12-01 18:04:50.353
+!MESSAGE Indexed 'CAN_Master2_sniffer' (29 sources, 122 headers) in 5,2 sec: 11 854 declarations; 57 515 references; 2 unresolved inclusions; 42 syntax errors; 147 unresolved names (0,21%)
+
+!ENTRY org.eclipse.cdt.core 1 0 2023-12-01 18:05:24.886
+!MESSAGE Indexed 'CAN_Master2_receiver' (0 sources, 0 headers) in 0 sec: 0 declarations; 0 references; 0 unresolved inclusions; 0 syntax errors; 0 unresolved names (0%)
+!SESSION 2023-12-01 18:06:54.550 -----------------------------------------------
+eclipse.buildId=Version 1.10.1
+java.version=11.0.14.1
+java.vendor=Eclipse Adoptium
+BootLoader constants: OS=win32, ARCH=x86_64, WS=win32, NL=pl_PL
+Command-line arguments:  -os win32 -ws win32 -arch x86_64
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 4 4 2023-12-01 18:07:06.222
+!MESSAGE CubeMX plugin appears to be active, Log4j initialization might be too late.
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 1 1 2023-12-01 18:07:06.284
+!MESSAGE Log4j initialized with config file C:\Users\tomek\OneDrive\Pulpit\SiSK\sisk_workspace\Project\.metadata\.log4j.xml
+
+!ENTRY com.st.stm32cube.ide.mcu.ide 1 1 2023-12-01 18:07:17.823
+!MESSAGE Started RMI Server, listening on port 41337
+
+!ENTRY org.eclipse.cdt.core 1 0 2023-12-01 18:10:18.589
+!MESSAGE Indexed 'CAN_Master1' (37 sources, 131 headers) in 4.48 sec: 14,705 declarations; 89,747 references; 2 unresolved inclusions; 42 syntax errors; 147 unresolved names (0.14%)
+
+!ENTRY org.eclipse.cdt.core 1 0 2023-12-01 18:10:21.666
+!MESSAGE Indexed 'CAN_Master2_receiver' (29 sources, 122 headers) in 3.07 sec: 11,854 declarations; 57,515 references; 2 unresolved inclusions; 42 syntax errors; 147 unresolved names (0.21%)
