@@ -1,0 +1,13 @@
+/*
+ * crc_32.h
+ *
+ *  Created on: Dec 17, 2023
+ *      Author: tomek
+ */
+
+#ifndef TESTS_CRC32_CRC_32_H_
+#define TESTS_CRC32_CRC_32_H_
+
+int crc_32_benchmark();
+
+#endif /* TESTS_CRC32_CRC_32_H_ */

@@ -1,0 +1,14 @@
+/*
+ * recursion.h
+ *
+ *  Created on: Dec 17, 2023
+ *      Author: tomek
+ */
+
+#ifndef TESTS_RECURSION_RECURSION_H_
+#define TESTS_RECURSION_RECURSION_H_
+
+void recursion_initialise_benchmark()
+int recursion_benchmark(void);
+
+#endif /* TESTS_RECURSION_RECURSION_H_ */

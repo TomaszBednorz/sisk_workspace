@@ -1,0 +1,10 @@
+21:19:24 **** Incremental Build of configuration Debug for project piask ****
+make -j8 all 
+arm-none-eabi-size   piask.elf 
+   text	   data	    bss	    dec	    hex	filename
+  16196	     20	   2212	  18428	   47fc	piask.elf
+Finished building: default.size.stdout
+ 
+
+21:19:24 Build Finished. 0 errors, 0 warnings. (took 312ms)
+

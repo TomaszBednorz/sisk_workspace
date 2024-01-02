@@ -1,0 +1,4 @@
+../Core/Lib/LSM6DSO/lsm6dso_com.c:18:9:LSM6DSO_SingleRead	32	static
+../Core/Lib/LSM6DSO/lsm6dso_com.c:39:6:LSM6DSO_SingleWrite	32	static
+../Core/Lib/LSM6DSO/lsm6dso_com.c:59:6:LSM6DSO_MultipleRead	88	dynamic
+../Core/Lib/LSM6DSO/lsm6dso_com.c:89:6:LSM6DSO_MultipleWrite	88	dynamic

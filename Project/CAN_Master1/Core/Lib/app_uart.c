@@ -12,7 +12,9 @@
  ************************************************* Defines *************************************************
  ***********************************************************************************************************/
 
-#define APP_UART_CONVERT_TO_DEC(in)  (uint32_t)((uint8_t)in - 48U)
+#define APP_UART_CONVERT_TO_DEC(in)   (in - 48U)
+
+#define APP_UART_MAX_PWM_VALUE		  (100U)
 
 /***********************************************************************************************************
  *********************************************** Data types ************************************************
@@ -20,20 +22,11 @@
 
 typedef enum
 {
-	APP_STATE_1_MODE = 0U,
-	APP_STATE_2_ID,
-	APP_STATE_3_DLC,
-	APP_STATE_4_DATA_1,
-	APP_STATE_5_DATA_2,
-	APP_STATE_6_DATA_3,
-	APP_STATE_7_DATA_4,
-	APP_STATE_8_DATA_5,
-	APP_STATE_9_DATA_6,
-	APP_STATE_10_DATA_7,
-	APP_STATE_11_DATA_8,
-	APP_STATE_12_PERIOD,
-	APP_STATE_13_SUMMARY,
-	APP_STATE_14_ERROR,
+	APP_STATE_1_R = 0U,
+	APP_STATE_2_G,
+	APP_STATE_3_B,
+	APP_STATE_4_SUMMARY,
+	APP_STATE_5_ERROR,
 	APP_STATE_MAX
 }AppUart_StateMachine_t;
 
@@ -42,14 +35,8 @@ typedef enum
  ***********************************************************************************************************/
 
 void AppUart_SendInfo(AppUart_StateMachine_t state);
-uint16_t AppUart_DecodeInputHex(uint8_t len);
-static uint8_t AppUart_ConvertToHex(uint8_t in);
-uint32_t AppUart_DecodeInputDec(uint8_t len);
-void AppUart_ProcessMode(void);
-void AppUart_ProcessId(void);
-void AppUart_ProcessDlc(void);
+uint16_t AppUart_DecodeInputDec(uint8_t len);
 void AppUart_ProcessData(uint8_t num);
-void AppUart_ProcessPeriod(void);
 void AppUart_ProcessSummary(void);
 void AppUart_ProcessError(void);
 
@@ -62,32 +49,16 @@ void AppUart_ProcessError(void);
  ***********************************************************************************************************/
 
 static AppUart_StateMachine_t AppUart_StateMachine;
-static char AppUart_Msg[250];
-static uint8_t AppUart_UartRxData[4];
+static char AppUart_Msg[150];
+static uint8_t AppUart_UartRxData[3];
 
-/* User CAN request */
-static uint8_t AppUart_RequestMode;
-static uint16_t AppUart_RequestId;
-static uint8_t AppUart_RequestDlc;
-static uint8_t AppUart_RequestData[8];
-static uint16_t AppUart_RequestPeriod;
+static uint8_t AppUartRGB[3];
 
-static char* AppCan_MsgTable[APP_STATE_MAX] = \
-		{"(1) Select mode (dec):\r\n" \
-		 "1 - Send single CAN frame\r\n" \
-		 "2 - Add CAN frame to scheduler ", \
-		 "\r\n(3) Frame ID (hex): ", \
-		 "\r\n(1) Data length (dec): ", \
-		 "\r\n(2) First byte (hex) ", \
-		 "\r\n(2) Second byte (hex) ", \
-		 "\r\n(2) Third byte (hex) ", \
-		 "\r\n(2) Fourth byte (hex) ", \
-		 "\r\n(2) Fifth byte (hex) ", \
-		 "\r\n(2) Sixth byte (hex) ", \
-		 "\r\n(2) Seventh byte (hex) ", \
-		 "\r\n(2) Eighth byte (hex) ", \
-		 "\r\n(4) Period [100ms base](dec): ", \
-		 "\r\n(1) Frame ready to transmit/schedule. Send 1 character to continue. ", \
+static char* AppUart_MsgTable[APP_STATE_MAX] = \
+		{"\r\n(3) Red led PWM in %% (dec):", \
+		 "\r\n(3) Green led PWM in %% (dec):", \
+		 "\r\n(3) Blue led PWM in %% (dec):", \
+		 "\r\n(1) Color saved. Send 1 character to continue. ", \
 		 "\r\n(1) Incorrect input! Try again. Send 1 character to continue. "};
 
 /***********************************************************************************************************
@@ -96,58 +67,30 @@ static char* AppCan_MsgTable[APP_STATE_MAX] = \
 
 void AppUart_Init(void)
 {
-	sprintf(AppUart_Msg, "Use the serial port to transmit a CAN frame or\r\n" \
-						 "add a CAN frame to the scheduler.\r\n" \
-						 "The required number of characters is present in parentheses.\r\n%s", \
-						 AppCan_MsgTable[APP_STATE_1_MODE]);
+	sprintf(AppUart_Msg, "\r\nUse the serial port to choose RGB LED color." \
+						 "\r\nThe required number of characters is present in parentheses.%s", \
+						 AppUart_MsgTable[APP_STATE_1_R]);
 	HAL_UART_Transmit_IT(&huart3, (uint8_t*)AppUart_Msg, sizeof(AppUart_Msg));
 
-	HAL_UART_Receive_IT(&huart3, AppUart_UartRxData, 1);
+	HAL_UART_Receive_IT(&huart3, AppUart_UartRxData, 3);
 }
 
 void AppUart_ProcessInput(void)
 {
 	switch (AppUart_StateMachine) {
-		case APP_STATE_1_MODE:
-			AppUart_ProcessMode();
+		case APP_STATE_1_R:
+			AppUart_ProcessData(0U);
 			break;
-		case APP_STATE_2_ID:
-			AppUart_ProcessId();
-			break;
-		case APP_STATE_3_DLC:
-			AppUart_ProcessDlc();
-			break;
-		case APP_STATE_4_DATA_1:
+		case APP_STATE_2_G:
 			AppUart_ProcessData(1U);
 			break;
-		case APP_STATE_5_DATA_2:
+		case APP_STATE_3_B:
 			AppUart_ProcessData(2U);
 			break;
-		case APP_STATE_6_DATA_3:
-			AppUart_ProcessData(3U);
-			break;
-		case APP_STATE_7_DATA_4:
-			AppUart_ProcessData(4U);
-			break;
-		case APP_STATE_8_DATA_5:
-			AppUart_ProcessData(5U);
-			break;
-		case APP_STATE_9_DATA_6:
-			AppUart_ProcessData(6U);
-			break;
-		case APP_STATE_10_DATA_7:
-			AppUart_ProcessData(7U);
-			break;
-		case APP_STATE_11_DATA_8:
-			AppUart_ProcessData(8U);
-			break;
-		case APP_STATE_12_PERIOD:
-			AppUart_ProcessPeriod();
-			break;
-		case APP_STATE_13_SUMMARY:
+		case APP_STATE_4_SUMMARY:
 			AppUart_ProcessSummary();
 			break;
-		case APP_STATE_14_ERROR:
+		case APP_STATE_5_ERROR:
 			AppUart_ProcessError();
 			break;
 		default:
@@ -168,47 +111,20 @@ void AppUart_SendInfo(AppUart_StateMachine_t state)
 	memset(AppUart_Msg, '\0', sizeof(AppUart_Msg));
 
 	switch (AppUart_StateMachine) {
-		case APP_STATE_1_MODE:
-			sprintf(AppUart_Msg, AppCan_MsgTable[APP_STATE_1_MODE]);
+		case APP_STATE_1_R:
+			sprintf(AppUart_Msg, AppUart_MsgTable[APP_STATE_1_R]);
 			break;
-		case APP_STATE_2_ID:
-			sprintf(AppUart_Msg, AppCan_MsgTable[APP_STATE_2_ID]);
+		case APP_STATE_2_G:
+			sprintf(AppUart_Msg, AppUart_MsgTable[APP_STATE_2_G]);
 			break;
-		case APP_STATE_3_DLC:
-			sprintf(AppUart_Msg, AppCan_MsgTable[APP_STATE_3_DLC]);
+		case APP_STATE_3_B:
+			sprintf(AppUart_Msg, AppUart_MsgTable[APP_STATE_3_B]);
 			break;
-		case APP_STATE_4_DATA_1:
-			sprintf(AppUart_Msg, AppCan_MsgTable[APP_STATE_4_DATA_1]);
+		case APP_STATE_4_SUMMARY:
+			sprintf(AppUart_Msg, AppUart_MsgTable[APP_STATE_4_SUMMARY]);
 			break;
-		case APP_STATE_5_DATA_2:
-			sprintf(AppUart_Msg, AppCan_MsgTable[APP_STATE_5_DATA_2]);
-			break;
-		case APP_STATE_6_DATA_3:
-			sprintf(AppUart_Msg, AppCan_MsgTable[APP_STATE_6_DATA_3]);
-			break;
-		case APP_STATE_7_DATA_4:
-			sprintf(AppUart_Msg, AppCan_MsgTable[APP_STATE_7_DATA_4]);
-			break;
-		case APP_STATE_8_DATA_5:
-			sprintf(AppUart_Msg, AppCan_MsgTable[APP_STATE_8_DATA_5]);
-			break;
-		case APP_STATE_9_DATA_6:
-			sprintf(AppUart_Msg, AppCan_MsgTable[APP_STATE_9_DATA_6]);
-			break;
-		case APP_STATE_10_DATA_7:
-			sprintf(AppUart_Msg, AppCan_MsgTable[APP_STATE_10_DATA_7]);
-			break;
-		case APP_STATE_11_DATA_8:
-			sprintf(AppUart_Msg, AppCan_MsgTable[APP_STATE_11_DATA_8]);
-			break;
-		case APP_STATE_12_PERIOD:
-			sprintf(AppUart_Msg, AppCan_MsgTable[APP_STATE_12_PERIOD]);
-			break;
-		case APP_STATE_13_SUMMARY:
-			sprintf(AppUart_Msg, AppCan_MsgTable[APP_STATE_13_SUMMARY]);
-			break;
-		case APP_STATE_14_ERROR:
-			sprintf(AppUart_Msg, AppCan_MsgTable[APP_STATE_14_ERROR]);
+		case APP_STATE_5_ERROR:
+			sprintf(AppUart_Msg, AppUart_MsgTable[APP_STATE_5_ERROR]);
 			break;
 		default:
 			break;
@@ -217,181 +133,63 @@ void AppUart_SendInfo(AppUart_StateMachine_t state)
 	HAL_UART_Transmit_IT(&huart3, (uint8_t*)AppUart_Msg, sizeof(AppUart_Msg));
 }
 
-
-uint16_t AppUart_DecodeInputHex(uint8_t len)
+uint16_t AppUart_DecodeInputDec(uint8_t len)
 {
-	static uint16_t mul[3] = {256U, 16U, 1U};
+	static uint8_t mul[3] = {100U, 10U, 1U};
 	uint16_t ret_val = 0U;
 
 	for(uint8_t i = 0; i < len; i++)
 	{
-		ret_val += (uint16_t)AppUart_ConvertToHex(AppUart_UartRxData[i]) * mul[3-len+i];
+		ret_val += (uint16_t)APP_UART_CONVERT_TO_DEC(AppUart_UartRxData[i]) * mul[3-len+i];
 	}
 
 	return ret_val;
 }
 
-static uint8_t AppUart_ConvertToHex(uint8_t in)
-{
-	uint8_t ret_val = 0U;
-
-	if((in >= 48U) && (in <= 57U))
-	{
-		ret_val = in - 48U;
-	}
-	else if((in >= 65U) && (in <= 70U))
-	{
-		ret_val = in - 55U;
-	}
-	else if((in >= 97U) && (in <= 102U))
-	{
-		ret_val = in - 87U;
-	}
-
-	return ret_val;
-}
-
-uint32_t AppUart_DecodeInputDec(uint8_t len)
-{
-	static uint32_t mul[4] = {1000U, 100U, 10U, 1U};
-	uint32_t ret_val = 0U;
-
-	for(uint8_t i = 0; i < len; i++)
-	{
-		ret_val += (uint32_t)APP_UART_CONVERT_TO_DEC(AppUart_UartRxData[i]) * mul[4-len+i];
-	}
-
-	return ret_val;
-}
-
-void AppUart_ProcessMode(void)
-{
-	uint8_t input;
-
-	input = (uint8_t)AppUart_DecodeInputDec(1U);
-
-	if((input == 1U) || (input == 2U))
-	{
-		AppUart_RequestMode = input;
-		AppUart_StateMachine++;
-		HAL_UART_Receive_IT(&huart3, AppUart_UartRxData, 3);
-	}
-	else
-	{
-		AppUart_StateMachine = APP_STATE_14_ERROR;
-		HAL_UART_Receive_IT(&huart3, AppUart_UartRxData, 1);
-	}
-}
-
-void AppUart_ProcessId(void)
-{
-	uint16_t input;
-
-	input = (uint16_t)AppUart_DecodeInputHex(3U);
-
-	if(input <= 2048U)
-	{
-		AppUart_RequestId = input;
-		AppUart_StateMachine++;
-	}
-	else
-	{
-		AppUart_StateMachine = APP_STATE_14_ERROR;
-	}
-
-	HAL_UART_Receive_IT(&huart3, AppUart_UartRxData, 1);
-}
-
-void AppUart_ProcessDlc(void)
-{
-	uint8_t input;
-
-	input = (uint8_t)AppUart_DecodeInputDec(1U);
-
-	if((input <= 8U) && (input >= 1U))
-	{
-		for(uint8_t i = 0; i < 8U; i++)
-		{
-			AppUart_RequestData[i] = 0U;
-		}
-
-		AppUart_RequestDlc = input;
-		AppUart_StateMachine++;
-		HAL_UART_Receive_IT(&huart3, AppUart_UartRxData, 2);
-	}
-	else
-	{
-		AppUart_StateMachine = APP_STATE_14_ERROR;
-		HAL_UART_Receive_IT(&huart3, AppUart_UartRxData, 1);
-	}
-}
-
+/* 0 - R, 1 - G, 2 - B */
 void AppUart_ProcessData(uint8_t num)
 {
 	uint8_t input;
 
-	input = (uint8_t)AppUart_DecodeInputHex(2U);
+	input = (uint8_t)AppUart_DecodeInputDec(3U);
 
-	AppUart_RequestData[num-1U] = input;
+	if(input <= APP_UART_MAX_PWM_VALUE)
+	{
+		AppUartRGB[num] = input;
 
-	if(num < AppUart_RequestDlc)
-	{
-		AppUart_StateMachine++;
-		HAL_UART_Receive_IT(&huart3, AppUart_UartRxData, 2);
-	}
-	else
-	{
-		if(AppUart_RequestMode == 1U)
+		if(AppUart_StateMachine < APP_STATE_3_B)
 		{
-			AppUart_StateMachine = APP_STATE_13_SUMMARY;
-			HAL_UART_Receive_IT(&huart3, AppUart_UartRxData, 1);
+			HAL_UART_Receive_IT(&huart3, AppUart_UartRxData, 3);
 		}
 		else
 		{
-			AppUart_StateMachine = APP_STATE_12_PERIOD;
-			HAL_UART_Receive_IT(&huart3, AppUart_UartRxData, 4);
+			HAL_UART_Receive_IT(&huart3, AppUart_UartRxData, 1);
 		}
-	}
-}
 
-void AppUart_ProcessPeriod(void)
-{
-	uint32_t input;
-
-	input = (uint32_t)AppUart_DecodeInputDec(4U);
-
-	if(input > 0U)
-	{
-		AppUart_RequestPeriod = input;
 		AppUart_StateMachine++;
 	}
 	else
 	{
-		AppUart_StateMachine = APP_STATE_14_ERROR;
+		AppUart_StateMachine = APP_STATE_5_ERROR;
+		HAL_UART_Receive_IT(&huart3, AppUart_UartRxData, 1);
 	}
+	
 
-	HAL_UART_Receive_IT(&huart3, AppUart_UartRxData, 1);
+
 }
 
 void AppUart_ProcessSummary(void)
 {
-	if(AppUart_RequestMode == 1U)
-	{
-		AppCan_TxFrame(AppUart_RequestData, AppUart_RequestDlc, AppUart_RequestId);
-	}
-	else
-	{
-		AppCan_AddToScheaduler(AppUart_RequestData, AppUart_RequestDlc, AppUart_RequestId, AppUart_RequestPeriod);
-	}
+	AppCan_FillFrame(AppCanFrame5_Rgb, AppUartRGB);
 
-	AppUart_StateMachine = APP_STATE_1_MODE;
-	HAL_UART_Receive_IT(&huart3, AppUart_UartRxData, 1);
+	AppUart_StateMachine = APP_STATE_1_R;
+	HAL_UART_Receive_IT(&huart3, AppUart_UartRxData, 3);
 }
 
 void AppUart_ProcessError(void)
 {
-	AppUart_StateMachine = APP_STATE_1_MODE;
-	HAL_UART_Receive_IT(&huart3, AppUart_UartRxData, 1);
+	AppUart_StateMachine = APP_STATE_1_R;
+	HAL_UART_Receive_IT(&huart3, AppUart_UartRxData, 3);
 }
 
 

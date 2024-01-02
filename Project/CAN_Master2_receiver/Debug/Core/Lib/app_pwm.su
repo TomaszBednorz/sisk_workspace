@@ -1,0 +1,2 @@
+../Core/Lib/app_pwm.c:32:6:AppPwm_Init	8	static
+../Core/Lib/app_pwm.c:39:6:AppPwm_Set	16	static

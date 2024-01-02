@@ -1,0 +1,7 @@
+../Core/Lib/app_uart.c:68:6:AppUart_Init	8	static
+../Core/Lib/app_uart.c:78:6:AppUart_ProcessInput	8	static
+../Core/Lib/app_uart.c:109:6:AppUart_SendInfo	16	static
+../Core/Lib/app_uart.c:136:10:AppUart_DecodeInputDec	24	static
+../Core/Lib/app_uart.c:150:6:AppUart_ProcessData	24	static
+../Core/Lib/app_uart.c:181:6:AppUart_ProcessSummary	8	static
+../Core/Lib/app_uart.c:189:6:AppUart_ProcessError	8	static

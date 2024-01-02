@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "stdint.h": "c",
+        "lsm6dso_regs.h": "c",
+        "lsm6dso.h": "c",
+        "lsm6dso_types.h": "c"
+    }
+}

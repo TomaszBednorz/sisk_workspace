@@ -1,0 +1,2 @@
+../Core/Lib/app_system.c:34:6:AppSystem_Init	8	static
+../Core/Lib/app_system.c:40:6:AppSystem_MainTask	8	static

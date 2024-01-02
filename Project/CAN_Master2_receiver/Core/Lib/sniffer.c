@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include "usart.h"
 #include "can.h"
+#include "app_pwm.h"
 
 /***********************************************************************************************************
  ************************************************* Defines *************************************************
@@ -20,6 +21,12 @@
 /***********************************************************************************************************
  **************************************** Local function prototypes ****************************************
  ***********************************************************************************************************/
+
+static void Sniffer_ProcessDataGyro(uint8_t* buffer);
+static void Sniffer_ProcessDataAcc(uint8_t* buffer);
+static void Sniffer_ProcessDataTemp(uint8_t* buffer);
+static void Sniffer_ProcessDataLight(uint8_t* buffer);
+static void Sniffer_ProcessDataRgb(uint8_t* buffer);
 
 /***********************************************************************************************************
  ******************************************** Exported objects *********************************************
@@ -62,11 +69,27 @@ void Sniffer_Init(void)
 
 void Sniffer_Transmit(uint8_t* buffer, uint32_t len, uint32_t id)
 {
-	uint32_t time = HAL_GetTick();
 	memset(Sniffer_Msg, '\0', sizeof(Sniffer_Msg));
-	sprintf(Sniffer_Msg, "%lu ID: %x DLC: %x DATA: %x %x %x %x %x %x %x %x\r\n", \
-			time, (uint16_t)id, (uint8_t)len, buffer[0], buffer[1], buffer[2], buffer[3], \
-			buffer[4], buffer[5], buffer[6], buffer[7]);
+
+	switch (id) {
+		case 0x10:
+			Sniffer_ProcessDataGyro(buffer);
+			break;
+		case 0x15:
+			Sniffer_ProcessDataAcc(buffer);
+			break;
+		case 0x20:
+			Sniffer_ProcessDataTemp(buffer);
+			break;
+		case 0x40:
+			Sniffer_ProcessDataLight(buffer);
+			break;
+		case 0x80:
+			Sniffer_ProcessDataRgb(buffer);
+			break;
+		default:
+			break;
+	}
 
 	HAL_UART_Transmit_IT(&huart3, (uint8_t*)Sniffer_Msg, sizeof(Sniffer_Msg));
 }
@@ -75,10 +98,68 @@ void Sniffer_Transmit(uint8_t* buffer, uint32_t len, uint32_t id)
  ******************************************** Local functions **********************************************
  ***********************************************************************************************************/
 
+static void Sniffer_ProcessDataGyro(uint8_t* buffer)
+{
+	int16_t raw_x, raw_y, raw_z;
+	float x, y, z;
 
+	raw_x = (int16_t)(buffer[0] | ((uint16_t)buffer[1] << 8U));
+	raw_y = (int16_t)(buffer[2] | ((uint16_t)buffer[3] << 8U));
+	raw_z = (int16_t)(buffer[4] | ((uint16_t)buffer[5] << 8U));
 
+	// Convert to dps
+	x = (float)raw_x * 500.0f / 32768.0f;
+	y = (float)raw_y * 500.0f / 32768.0f;
+	z = (float)raw_z * 500.0f / 32768.0f;
 
+	sprintf(Sniffer_Msg, "Gyro           x: %.3f, y: %.3f, z: %.3f [dps]\r\n", x, y, z);
+}
 
+static void Sniffer_ProcessDataAcc(uint8_t* buffer)
+{
+	int16_t raw_x, raw_y, raw_z;
+	float x, y, z;
 
+	raw_x = (int16_t)(buffer[0] | ((uint16_t)buffer[1] << 8U));
+	raw_y = (int16_t)(buffer[2] | ((uint16_t)buffer[3] << 8U));
+	raw_z = (int16_t)(buffer[4] | ((uint16_t)buffer[5] << 8U));
 
+	// Convert to g
+	x = (float)raw_x * 4.0f / 32768.0f;
+	y = (float)raw_y * 4.0f / 32768.0f;
+	z = (float)raw_z * 4.0f / 32768.0f;
+
+	sprintf(Sniffer_Msg, "Accelerometer  x: %.3f, y: %.3f, z: %.3f [g]\r\n", x, y, z);
+}
+
+static void Sniffer_ProcessDataTemp(uint8_t* buffer)
+{
+	int16_t raw_temp;
+	float temp;
+
+	raw_temp = (int16_t)(buffer[0] | ((uint16_t)buffer[1] << 8U));
+
+	// Convert to °C
+	temp = (float)raw_temp / 256.0f + 25.0f;
+
+	sprintf(Sniffer_Msg, "Temp:          %.3f [Cel]\r\n", temp);
+}
+
+static void Sniffer_ProcessDataLight(uint8_t* buffer)
+{
+	uint16_t raw_light;
+
+	raw_light = (uint16_t)(buffer[0] | ((uint16_t)buffer[1] << 8U));
+
+	sprintf(Sniffer_Msg, "Light value:   %u [12 bit ADC]\r\n", raw_light);
+}
+
+static void Sniffer_ProcessDataRgb(uint8_t* buffer)
+{
+	sprintf(Sniffer_Msg, "PWM set        R: %d, G: %d, B: %d\r\n", buffer[0], buffer[1], buffer[2]);
+
+	AppPwm_Set(APP_PWM_COLOR_R, buffer[0]);
+	AppPwm_Set(APP_PWM_COLOR_G, buffer[1]);
+	AppPwm_Set(APP_PWM_COLOR_B, buffer[2]);
+}
 

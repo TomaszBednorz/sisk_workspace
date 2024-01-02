@@ -1,0 +1,143 @@
+/***********************************************************************************************************
+ ********************************************* Included files **********************************************
+ ***********************************************************************************************************/
+
+#include <sniffer.h>
+#include <inttypes.h>
+#include <string.h>
+#include <stdio.h>
+#include "usart.h"
+#include "can.h"
+#include "app_pwm.h"
+
+/***********************************************************************************************************
+ ************************************************* Defines *************************************************
+ ***********************************************************************************************************/
+
+/***********************************************************************************************************
+ *********************************************** Data types ************************************************
+ ***********************************************************************************************************/
+
+/***********************************************************************************************************
+ **************************************** Local function prototypes ****************************************
+ ***********************************************************************************************************/
+
+static void Sniffer_ProcessDataGyro(uint8_t* buffer);
+static void Sniffer_ProcessDataAcc(uint8_t* buffer);
+static void Sniffer_ProcessDataTemp(uint8_t* buffer);
+static void Sniffer_ProcessDataLight(uint8_t* buffer);
+static void Sniffer_ProcessDataRgb(uint8_t* buffer);
+
+/***********************************************************************************************************
+ ******************************************** Exported objects *********************************************
+ ***********************************************************************************************************/
+
+/***********************************************************************************************************
+ ********************************************* Local objects ***********************************************
+ ***********************************************************************************************************/
+
+static char Sniffer_Msg[60];
+
+/***********************************************************************************************************
+ ******************************************* Exported functions ********************************************
+ ***********************************************************************************************************/
+
+void Sniffer_Init(void)
+{
+	CAN_FilterTypeDef canfil;
+	canfil.FilterBank = 0;
+	canfil.FilterMode = CAN_FILTERMODE_IDMASK;
+	canfil.FilterFIFOAssignment = CAN_RX_FIFO0;
+    canfil.FilterIdHigh = 0;
+	canfil.FilterIdLow = 0;
+	canfil.FilterMaskIdHigh = 0;
+	canfil.FilterMaskIdLow = 0;
+	canfil.FilterScale = CAN_FILTERSCALE_32BIT;
+	canfil.FilterActivation = ENABLE;
+
+	HAL_CAN_ConfigFilter(&hcan1,&canfil); //Initialize CAN Filter
+
+	HAL_CAN_Start(&hcan1);
+
+	HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING | CAN_IT_RX_FIFO1_MSG_PENDING); // IRQ notification
+
+	sprintf(Sniffer_Msg, "CAN Master 2 Sniffer initialized\r\n");
+	HAL_UART_Transmit_IT(&huart3, (uint8_t*)Sniffer_Msg, sizeof(Sniffer_Msg));
+}
+
+
+
+void Sniffer_Transmit(uint8_t* buffer, uint32_t len, uint32_t id)
+{
+	memset(Sniffer_Msg, '\0', sizeof(Sniffer_Msg));
+
+//	sprintf(Sniffer_Msg, "%lu ID: %x DLC: %x DATA: %x %x %x %x %x %x %x %x\r\n", \
+//			time, (uint16_t)id, (uint8_t)len, buffer[0], buffer[1], buffer[2], buffer[3], \
+//			buffer[4], buffer[5], buffer[6], buffer[7]);
+
+	switch (id) {
+		case 0x10:
+			Sniffer_ProcessDataGyro(buffer);
+			break;
+		case 0x15:
+			Sniffer_ProcessDataAcc(buffer);
+			break;
+		case 0x20:
+			Sniffer_ProcessDataTemp(buffer);
+			break;
+		case 0x40:
+			Sniffer_ProcessDataLight(buffer);
+			break;
+		case 0x80:
+			Sniffer_ProcessDataRgb(buffer);
+			break;
+		default:
+			break;
+	}
+
+	HAL_UART_Transmit_IT(&huart3, (uint8_t*)Sniffer_Msg, sizeof(Sniffer_Msg));
+}
+
+/***********************************************************************************************************
+ ******************************************** Local functions **********************************************
+ ***********************************************************************************************************/
+
+static void Sniffer_ProcessDataGyro(uint8_t* buffer)
+{
+	int16_t raw_x, raw_y, raw_z;
+	int16_t x, y, z;
+
+	raw_x = (int16_t)(buffer[0] | ((uint16_t)buffer[1] << 8U));
+	raw_y = (int16_t)(buffer[2] | ((uint16_t)buffer[3] << 8U));
+	raw_z = (int16_t)(buffer[4] | ((uint16_t)buffer[5] << 8U));
+
+	// Convert to dps
+	x = raw_x * 500 / 32768
+
+	sprintf(Sniffer_Msg, "Gyro - x: %d, y: %d, z: %d\r\n", x, y, z);
+}
+
+static void Sniffer_ProcessDataAcc(uint8_t* buffer)
+{
+
+}
+
+static void Sniffer_ProcessDataTemp(uint8_t* buffer)
+{
+
+}
+
+static void Sniffer_ProcessDataLight(uint8_t* buffer)
+{
+
+}
+
+static void Sniffer_ProcessDataRgb(uint8_t* buffer)
+{
+	sprintf(Sniffer_Msg, "PWM set - R: %d, G: %d, B: %d\r\n", buffer[0], buffer[1], buffer[2]);
+
+	AppPwm_Set(APP_PWM_COLOR_R, buffer[0]);
+	AppPwm_Set(APP_PWM_COLOR_G, buffer[1]);
+	AppPwm_Set(APP_PWM_COLOR_B, buffer[2]);
+}
+

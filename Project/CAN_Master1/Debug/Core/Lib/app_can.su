@@ -1,0 +1,5 @@
+../Core/Lib/app_can.c:65:6:AppCan_Init	8	static
+../Core/Lib/app_can.c:70:6:AppCan_Task	16	static
+../Core/Lib/app_can.c:88:6:AppCan_FillFrame	24	static
+../Core/Lib/app_can.c:100:13:AppCan_TxFrame	48	static
+../Core/Lib/app_can.c:118:13:AppCan_ProcessFrame	32	static

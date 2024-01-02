@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "can.h"
+#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -26,6 +27,7 @@
 /* USER CODE BEGIN Includes */
 
 #include "sniffer.h"
+#include "app_pwm.h"
 
 /* USER CODE END Includes */
 
@@ -90,9 +92,11 @@ int main(void)
   MX_GPIO_Init();
   MX_USART3_UART_Init();
   MX_CAN1_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
   Sniffer_Init();
+  AppPwm_Init();
 
   /* USER CODE END 2 */
 

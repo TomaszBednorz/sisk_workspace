@@ -1,0 +1,7 @@
+../Core/Lib/sniffer.c:45:6:Sniffer_Init	48	static
+../Core/Lib/sniffer.c:70:6:Sniffer_Transmit	24	static
+../Core/Lib/sniffer.c:101:13:Sniffer_ProcessDataGyro	56	static
+../Core/Lib/sniffer.c:118:13:Sniffer_ProcessDataAcc	56	static
+../Core/Lib/sniffer.c:135:13:Sniffer_ProcessDataTemp	24	static
+../Core/Lib/sniffer.c:148:13:Sniffer_ProcessDataLight	24	static
+../Core/Lib/sniffer.c:157:13:Sniffer_ProcessDataRgb	24	static
